@@ -2,47 +2,99 @@
 
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import { Icon, LatLngExpression } from "leaflet";
-// Note: Removed unused 'Image' import
 
-// --- Updated Placeholder Data ---
-const mapCenter: LatLngExpression = [31.9038, 35.2034]; // Centered on Ramallah, Palestine
+// Define the BusName type (needs to match the one in app/page.tsx)
+type BusName = "Bus 1" | "Bus 2" | "Bus 3" | "Bus 4";
 
-// Placeholder Bus Stops data (includes name and next arrival time)
-const busStopsData = [
-  { position: [31.906, 35.200] as LatLngExpression, name: "Amphi Stop", nextArrival: "14:42" },
-  { position: [31.907, 35.205] as LatLngExpression, name: "Harbo Station", nextArrival: "10:30" },
-  { position: [31.902, 35.208] as LatLngExpression, name: "Palsa Stop", nextArrival: "15:21" },
-  { position: [31.899, 35.204] as LatLngExpression, name: "Tutu Stop", nextArrival: "16:20" },
-  { position: [31.900, 35.200] as LatLngExpression, name: "Acari Stop", nextArrival: "17:10" },
-];
-
-// Placeholder Bus Location data (includes bus details)
-const busData = {
-    position: [31.904, 35.204] as LatLngExpression,
-    name: "Bus 1",
-    capacity: "45%",
-    nextStop: "Harbo Station",
+// Define types for the nested data structures
+type StopData = {
+    position: LatLngExpression;
+    name: string;
+    nextArrival: string;
 };
-// --- End Placeholder Data ---
 
-// Extract just the positions for the Polyline
-const routePositions: LatLngExpression[] = busStopsData.map(stop => stop.position);
+type BusLocationData = {
+    position: LatLngExpression;
+    name: string;
+    capacity: string;
+    nextStop: string;
+};
 
-// Custom icon for the bus stops
+type BusRoute = {
+    center: LatLngExpression;
+    stops: StopData[];
+    location: BusLocationData;
+};
+
+// --- Global Map Data (Typed object) ---
+const BUS_ROUTES_DATA: Record<BusName, BusRoute> = {
+    "Bus 1": {
+        center: [31.9038, 35.2034], // Ramallah
+        stops: [
+          { position: [31.906, 35.200], name: "Amphi Stop", nextArrival: "14:42" },
+          { position: [31.907, 35.205], name: "Harbo Station", nextArrival: "10:30" },
+          { position: [31.902, 35.208], name: "Palsa Stop", nextArrival: "15:21" },
+          { position: [31.899, 35.204], name: "Tutu Stop", nextArrival: "16:20" },
+        ],
+        location: {
+            position: [31.904, 35.204],
+            name: "Bus 1",
+            capacity: "45%",
+            nextStop: "Harbo Station",
+        },
+    },
+    "Bus 2": {
+        center: [32.2241, 35.2478], // Nablus
+        stops: [
+          { position: [32.220, 35.240], name: "Market Stop", nextArrival: "10:00" },
+          { position: [32.225, 35.250], name: "University Gate", nextArrival: "10:30" },
+          { position: [32.228, 35.245], name: "Old City Entrance", nextArrival: "11:00" },
+        ],
+        location: {
+            position: [32.222, 35.245],
+            name: "Bus 2",
+            capacity: "90%",
+            nextStop: "University Gate",
+        },
+    },
+    // Add placeholder data for the remaining keys to satisfy the type 'BusName'
+    "Bus 3": {
+        center: [31.7683, 35.2137], // Jerusalem placeholder
+        stops: [],
+        location: { position: [31.770, 35.215], name: "Bus 3", capacity: "0%", nextStop: "Terminal" },
+    },
+    "Bus 4": {
+        center: [31.5000, 34.4667], // Gaza placeholder
+        stops: [],
+        location: { position: [31.505, 34.470], name: "Bus 4", capacity: "0%", nextStop: "Terminal" },
+    },
+};
+
+// Custom icons remain the same
 const stopIcon = new Icon({
-  iconUrl: "/window.svg", // Using one of your existing icons as a placeholder
+  iconUrl: "/window.svg",
   iconSize: [25, 25],
 });
 
-// Custom icon for the bus
 const busIcon = new Icon({
-  iconUrl: "/bus-icon.svg", // Assumes you added 'bus-icon.svg' to your /public folder
+  iconUrl: "/bus-icon.svg",
   iconSize: [35, 35],
 });
 
-export default function Map() {
+export default function Map({ selectedBus }: { selectedBus: BusName }) { // <--- Use typed prop
+  // Fix indexing: selectedBus is now guaranteed to be one of the keys
+  const currentBusData = BUS_ROUTES_DATA[selectedBus];
+
+  // Extract necessary variables from the current data
+  const mapCenter = currentBusData.center;
+  const busStopsData = currentBusData.stops;
+  const busData = currentBusData.location;
+  // Fix implicit 'any' on 'stop' parameter
+  const routePositions: LatLngExpression[] = busStopsData.map((stop: StopData) => stop.position);
+
   return (
     <MapContainer
+      key={selectedBus}
       center={mapCenter}
       zoom={15}
       style={{ height: "500px", width: "100%", borderRadius: "8px" }}
@@ -53,9 +105,10 @@ export default function Map() {
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {/* Map Bus Stops and Popups */}
-      {busStopsData.map((stop, idx) => (
-        <Marker key={idx} position={stop.position} icon={stopIcon}>
+      {/* Map Bus Stops and Popups (Filtered) */}
+      {busStopsData.map((stop) => (
+        // Fix implicit 'any' on 'stop' parameter (implicitly handled by .map on a typed array)
+        <Marker key={stop.name} position={stop.position} icon={stopIcon}>
           <Popup className="bus-stop-popup">
             <div className="p-2 font-sans">
                 <h3 className="text-lg font-bold mb-1">{stop.name}</h3>
@@ -67,10 +120,10 @@ export default function Map() {
         </Marker>
       ))}
 
-      {/* Draw the route line */}
+      {/* Draw the route line (Filtered) */}
       <Polyline positions={routePositions} color="gray" dashArray="5, 10" />
 
-      {/* Map the Bus Location and Popups */}
+      {/* Map the Bus Location and Popups (Filtered) */}
       <Marker position={busData.position} icon={busIcon}>
         <Popup className="bus-location-popup">
             <div className="p-2 font-sans">
