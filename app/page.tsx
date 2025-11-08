@@ -1,65 +1,78 @@
-import Image from "next/image";
+import dynamic from "next/dynamic";
+import { useMemo } from "react";
+
+// Dynamically import the Map component with SSR disabled
+// This is crucial because Leaflet needs the 'window' object, which doesn't exist on the server.
+const Map = dynamic(() => import("./components/Map"), {
+  ssr: false,
+});
+
+// A simple component for the bus selection buttons
+function BusButton({
+  busName,
+  isActive = false,
+}: {
+  busName: string;
+  isActive?: boolean;
+}) {
+  const activeClass =
+    "bg-green-600 text-white";
+  const inactiveClass =
+    "bg-gray-300 text-gray-700 hover:bg-gray-400";
+
+  return (
+    <button
+      className={`py-2 px-6 rounded-md font-semibold ${
+        isActive ? activeClass : inactiveClass
+      }`}
+    >
+      {busName}
+    </button>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex min-h-screen flex-col items-center">
+      {/* === Header Section === */}
+      <header className="w-full h-16 bg-gray-900 text-white flex items-center justify-between px-6 shadow-md">
+        <div className="text-xl font-bold">Amana Logo</div>
+        <button className="bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded-md">
+          Menu
+        </button>
+      </header>
+
+      {/* === Hero Section === */}
+      <section className="w-full bg-green-500 text-white p-12 text-center shadow-lg">
+        <h1 className="text-5xl font-bold">Amana Transportation</h1>
+        <p className="text-xl mt-2">
+          Proudly servicing Palestinians since 2019
+        </p>
+      </section>
+
+      {/* === Active Bus Map Section === */}
+      <section className="w-full max-w-5xl mx-auto my-8 p-6 bg-yellow-100 rounded-lg shadow-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Active Bus Map
+        </h2>
+
+        {/* Bus Selection Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <BusButton busName="Bus 1" isActive={true} />
+          <BusButton busName="Bus 2" />
+          <BusButton busName="Bus 3" />
+          <BusButton busName="Bus 4" />
+          <BusButton busName="Bus 1" />
+          <BusButton busName="Bus 2" />
+          <BusButton busName="Bus 3" />
+          <BusButton busName="Bus 4" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Map Container */}
+        <div className="w-full h-[500px] rounded-lg overflow-hidden border-2 border-gray-300">
+          <Map />
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
