@@ -2,24 +2,31 @@
 
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import { Icon, LatLngExpression } from "leaflet";
-import Image from "next/image";
+// Note: Removed unused 'Image' import
 
-// --- Placeholder Data ---
-// We center the map on Ramallah, Palestine, based on your description.
-const mapCenter: LatLngExpression = [31.9038, 35.2034];
+// --- Updated Placeholder Data ---
+const mapCenter: LatLngExpression = [31.9038, 35.2034]; // Centered on Ramallah, Palestine
 
-// Placeholder bus stops
-const busStops: LatLngExpression[] = [
-  [31.906, 35.200], // Stop 1
-  [31.907, 35.205], // Stop 2
-  [31.902, 35.208], // Stop 3
-  [31.899, 35.204], // Stop 4
-  [31.900, 35.200], // Stop 5
+// Placeholder Bus Stops data (includes name and next arrival time)
+const busStopsData = [
+  { position: [31.906, 35.200] as LatLngExpression, name: "Amphi Stop", nextArrival: "14:42" },
+  { position: [31.907, 35.205] as LatLngExpression, name: "Harbo Station", nextArrival: "10:30" },
+  { position: [31.902, 35.208] as LatLngExpression, name: "Palsa Stop", nextArrival: "15:21" },
+  { position: [31.899, 35.204] as LatLngExpression, name: "Tutu Stop", nextArrival: "16:20" },
+  { position: [31.900, 35.200] as LatLngExpression, name: "Acari Stop", nextArrival: "17:10" },
 ];
 
-// Placeholder bus location
-const busLocation: LatLngExpression = [31.904, 35.204];
+// Placeholder Bus Location data (includes bus details)
+const busData = {
+    position: [31.904, 35.204] as LatLngExpression,
+    name: "Bus 1",
+    capacity: "45%",
+    nextStop: "Harbo Station",
+};
 // --- End Placeholder Data ---
+
+// Extract just the positions for the Polyline
+const routePositions: LatLngExpression[] = busStopsData.map(stop => stop.position);
 
 // Custom icon for the bus stops
 const stopIcon = new Icon({
@@ -40,27 +47,38 @@ export default function Map() {
       zoom={15}
       style={{ height: "500px", width: "100%", borderRadius: "8px" }}
     >
-      {/* This is a black and white map tile layer from CartoDB.
-        It's free and looks professional.
-      */}
+      {/* Black and white map tile layer */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {/* Map Bus Stops */}
-      {busStops.map((position, idx) => (
-        <Marker key={idx} position={position} icon={stopIcon}>
-          <Popup>Bus Stop {idx + 1}</Popup>
+      {/* Map Bus Stops and Popups */}
+      {busStopsData.map((stop, idx) => (
+        <Marker key={idx} position={stop.position} icon={stopIcon}>
+          <Popup className="bus-stop-popup">
+            <div className="p-2 font-sans">
+                <h3 className="text-lg font-bold mb-1">{stop.name}</h3>
+                <p className="text-sm">
+                    Next Bus Arrival Time: <span className="font-semibold">{stop.nextArrival}</span>
+                </p>
+            </div>
+          </Popup>
         </Marker>
       ))}
 
       {/* Draw the route line */}
-      <Polyline positions={busStops} color="gray" dashArray="5, 10" />
+      <Polyline positions={routePositions} color="gray" dashArray="5, 10" />
 
-      {/* Map the Bus Location */}
-      <Marker position={busLocation} icon={busIcon}>
-        <Popup>Bus 1 - Next Stop: Stop 3</Popup>
+      {/* Map the Bus Location and Popups */}
+      <Marker position={busData.position} icon={busIcon}>
+        <Popup className="bus-location-popup">
+            <div className="p-2 font-sans">
+                <h3 className="text-lg font-bold mb-1">{busData.name}</h3>
+                <p className="text-sm">Capacity Level: <span className="font-semibold">{busData.capacity}</span></p>
+                <p className="text-sm">Next Stop: <span className="font-semibold text-green-600">{busData.nextStop}</span></p>
+            </div>
+        </Popup>
       </Marker>
     </MapContainer>
   );
