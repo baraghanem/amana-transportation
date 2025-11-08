@@ -1,11 +1,15 @@
-import dynamic from "next/dynamic";
-import { useMemo } from "react";
+// REMOVE these imports
+// import dynamic from "next/dynamic";
+// import { useMemo } from "react";
 
-// Dynamically import the Map component with SSR disabled
-// This is crucial because Leaflet needs the 'window' object, which doesn't exist on the server.
-const Map = dynamic(() => import("./components/Map"), {
-  ssr: false,
-});
+// ADD this import
+import ClientMap from "./components/ClientMap";
+
+// This component was dynamically importing the map.
+// REMOVE this entire block:
+// const Map = dynamic(() => import("./components/Map"), {
+//   ssr: false,
+// });
 
 // A simple component for the bus selection buttons
 function BusButton({
@@ -15,10 +19,8 @@ function BusButton({
   busName: string;
   isActive?: boolean;
 }) {
-  const activeClass =
-    "bg-green-600 text-white";
-  const inactiveClass =
-    "bg-gray-300 text-gray-700 hover:bg-gray-400";
+  const activeClass = "bg-green-600 text-white";
+  const inactiveClass = "bg-gray-300 text-gray-700 hover:bg-gray-400";
 
   return (
     <button
@@ -70,7 +72,8 @@ export default function Home() {
 
         {/* Map Container */}
         <div className="w-full h-[500px] rounded-lg overflow-hidden border-2 border-gray-300">
-          <Map />
+          {/* REPLACE <Map /> with <ClientMap /> */}
+          <ClientMap />
         </div>
       </section>
     </main>
