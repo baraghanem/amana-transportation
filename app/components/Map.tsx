@@ -3,10 +3,9 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import { Icon, LatLngExpression } from "leaflet";
 
-// Define the BusName type (needs to match the one in app/page.tsx)
+// --- TYPE DEFINITIONS (Repeated for file self-containment) ---
 type BusName = "Bus 1" | "Bus 2" | "Bus 3" | "Bus 4";
 
-// Define types for the nested data structures
 type StopData = {
     position: LatLngExpression;
     name: string;
@@ -26,7 +25,7 @@ type BusRoute = {
     location: BusLocationData;
 };
 
-// --- Global Map Data (Typed object) ---
+// --- Global Map Data (No functional change, only type casting) ---
 const BUS_ROUTES_DATA: Record<BusName, BusRoute> = {
     "Bus 1": {
         center: [31.9038, 35.2034], // Ramallah
@@ -57,7 +56,6 @@ const BUS_ROUTES_DATA: Record<BusName, BusRoute> = {
             nextStop: "University Gate",
         },
     },
-    // Add placeholder data for the remaining keys to satisfy the type 'BusName'
     "Bus 3": {
         center: [31.7683, 35.2137], // Jerusalem placeholder
         stops: [],
@@ -73,23 +71,20 @@ const BUS_ROUTES_DATA: Record<BusName, BusRoute> = {
 // Custom icons remain the same
 const stopIcon = new Icon({
   iconUrl: "/window.svg",
-  iconSize: [25, 25],
+  iconSize: [30, 30], // Slightly larger pin
 });
 
 const busIcon = new Icon({
   iconUrl: "/bus-icon.svg",
-  iconSize: [35, 35],
+  iconSize: [40, 40], // Slightly larger bus icon
 });
 
-export default function Map({ selectedBus }: { selectedBus: BusName }) { // <--- Use typed prop
-  // Fix indexing: selectedBus is now guaranteed to be one of the keys
+export default function Map({ selectedBus }: { selectedBus: BusName }) {
   const currentBusData = BUS_ROUTES_DATA[selectedBus];
 
-  // Extract necessary variables from the current data
   const mapCenter = currentBusData.center;
   const busStopsData = currentBusData.stops;
   const busData = currentBusData.location;
-  // Fix implicit 'any' on 'stop' parameter
   const routePositions: LatLngExpression[] = busStopsData.map((stop: StopData) => stop.position);
 
   return (
@@ -97,7 +92,7 @@ export default function Map({ selectedBus }: { selectedBus: BusName }) { // <---
       key={selectedBus}
       center={mapCenter}
       zoom={15}
-      style={{ height: "500px", width: "100%", borderRadius: "8px" }}
+      style={{ height: "100%", width: "100%" }}
     >
       {/* Black and white map tile layer */}
       <TileLayer
@@ -105,31 +100,30 @@ export default function Map({ selectedBus }: { selectedBus: BusName }) { // <---
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {/* Map Bus Stops and Popups (Filtered) */}
+      {/* Map Bus Stops and Popups (IMPROVEMENT: Styled Popups) */}
       {busStopsData.map((stop) => (
-        // Fix implicit 'any' on 'stop' parameter (implicitly handled by .map on a typed array)
         <Marker key={stop.name} position={stop.position} icon={stopIcon}>
-          <Popup className="bus-stop-popup">
-            <div className="p-2 font-sans">
-                <h3 className="text-lg font-bold mb-1">{stop.name}</h3>
-                <p className="text-sm">
-                    Next Bus Arrival Time: <span className="font-semibold">{stop.nextArrival}</span>
+          <Popup>
+            <div className="p-2 bg-white rounded-lg shadow-md border-t-4 border-yellow-500">
+                <h3 className="text-base font-bold text-gray-800 mb-1">{stop.name}</h3>
+                <p className="text-sm text-gray-600">
+                    Next Bus: <span className="font-semibold text-green-600">{stop.nextArrival}</span>
                 </p>
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {/* Draw the route line (Filtered) */}
-      <Polyline positions={routePositions} color="gray" dashArray="5, 10" />
+      {/* Draw the route line */}
+      <Polyline positions={routePositions} color="#888" weight={4} dashArray="8, 12" />
 
-      {/* Map the Bus Location and Popups (Filtered) */}
+      {/* Map the Bus Location and Popups (IMPROVEMENT: Styled Popups) */}
       <Marker position={busData.position} icon={busIcon}>
-        <Popup className="bus-location-popup">
-            <div className="p-2 font-sans">
-                <h3 className="text-lg font-bold mb-1">{busData.name}</h3>
-                <p className="text-sm">Capacity Level: <span className="font-semibold">{busData.capacity}</span></p>
-                <p className="text-sm">Next Stop: <span className="font-semibold text-green-600">{busData.nextStop}</span></p>
+        <Popup>
+            <div className="p-2 bg-white rounded-lg shadow-md border-t-4 border-green-600">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{busData.name}</h3>
+                <p className="text-sm text-gray-600">Capacity: <span className={`font-semibold ${busData.capacity === '90%' ? 'text-red-500' : 'text-green-600'}`}>{busData.capacity}</span></p>
+                <p className="text-sm text-gray-600">Next Stop: <span className="font-semibold">{busData.nextStop}</span></p>
             </div>
         </Popup>
       </Marker>
